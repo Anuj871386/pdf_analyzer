@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, UploadFile, File
 import shutil, os
 from app.auth import router as auth_router
+from app.routes.upload_pdf import router as upload_router
 
 from app.auth import authenticate, create_token
 from .pdf_utils import extract_text
@@ -15,6 +16,7 @@ os.makedirs("responses", exist_ok=True)
 app = FastAPI()
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 app.include_router(auth_router)
+app.include_router(upload_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -61,13 +63,12 @@ def upload(file: UploadFile, token: str = Depends(oauth2)):
 
 @app.post("/analyze-pdf")
 async def analyze_pdf(file: UploadFile = File(...)):
-    if file.content_type != "application/pdf":
-        return {"error": "Only PDF allowed"}
-
     content = await file.read()
 
+    extracted_text = f"PDF size: {len(content)} bytes"
+
     return {
-        "filename": file.filename,
-        "size": len(content),
-        "result": "PDF uploaded successfully"
+        "message": "PDF uploaded successfully",
+        "text": extracted_text
     }
+
